@@ -30,7 +30,7 @@ LedControl lc=LedControl(12,11,10,1);
 
 void setup()
 {
-    //SET INTERRUPTS AND PINS
+//    SET INTERRUPTS AND PINS
     lc.shutdown(0,false);
   /* Set the brightness to a medium values */
     lc.setIntensity(0,8);
@@ -38,14 +38,17 @@ void setup()
     lc.clearDisplay(0);
     int score1 = 0;
     int score2 = 0;
+//    lcd Initialization
     lcd.init();
     lcd.backlight();
+//    init all things needed to be initialized
     init1();
     Serial.begin(9600);
+//    P1 controls
     attachInterrupt(digitalPinToInterrupt(19), left1, RISING);
     attachInterrupt(digitalPinToInterrupt(18), right1, RISING);
     pinMode(6, INPUT); 
-   
+//    P2 controls
     attachInterrupt(digitalPinToInterrupt(2), left2, RISING);
     pinMode(7, INPUT);
     attachInterrupt(digitalPinToInterrupt(3), right2, RISING);
@@ -54,7 +57,9 @@ void setup()
 }
 void loop()
 {
+//    update functtion, where almost everything happens
     update();
+//    delay, tthat checks for shooting every millisecond. This is used instead of interrupts as using all 6 interrupts was messing with the arduino
     for(int i = 0; i < 50; i++)
     {
       if(digitalRead(6) == HIGH)
@@ -77,12 +82,9 @@ void loop()
 
 
 
-
-
-
-
 void init1()
 {
+//    reset all variables supposed to be reset at begining of game
     y1  = 0;
     y2 = 7;
     b1 = false;
@@ -99,10 +101,16 @@ void init1()
             screen[i][n] = 0;
         }
     }
-    update();
-    //clear
-    //startinug animation
+  
+//    Show scores on LCD screen
     scores(score1, score2);
+//    starting animation - delay is decided by func f(i)
+    /*            _
+     *           | i = 0 : 500
+     * f(i) ==  {  i > 0 : f(i - 1) - f(i - 1)/5
+     *           |_
+     * {i E R : i % 1 = 0 intersect 0 <= i intersect f(i) > 50}
+    */
     for (int i = 400; i > 50; i -= (i / 5))
     {
         
@@ -120,14 +128,7 @@ void init1()
         lc.clearDisplay(0);
         delay(i);
     }
-//    y1  = 0;
-//    int y2 = 7;
-//    b1 = false;
-//    bool b2 = false;
-//    by1 = 0;
-//    int by2 = 0;
-//    update();
-//    
+    update();
 
 }
 void collide_bullets()
@@ -135,18 +136,18 @@ void collide_bullets()
     if ((b1 == true && b2 == true) && (by1 == by2))
     {
       if (b1time > b2time)
-      { //if 1 was shot before b2, disable only b2, in effect killing p2
+      { //if 1 was shot before b2, disable only b2, in effect having p2 lose
           b1 = false;
           Serial.println(2);
       }
       else
       {   if(b1time<b2time)
-          { //if 2 was shot first, disable only b1, in effect killing p1 later on this frame
+          { //if 2 was shot first, disable only b1, in effect having p1 lose later on this update
              b2 = false;
              Serial.println(1);
           }
           else
-          { //if they were at the same time, no one dies and both are diables
+          { //if they were at the same time, no one loses and both are diables
             b1 = false;
             b2 = false;   
             Serial.println("both");
@@ -156,8 +157,9 @@ void collide_bullets()
 }
 void collide1()
 {
+//    see if player 1 is loses
     if (y1 == by2 && b2 == true)
-    { // see if p1 dies
+    {
         score2++;
         Serial.print(score1);
         Serial.print(" ");
@@ -180,8 +182,10 @@ void collide1()
 }
 void collide2()
 {
+//    see if player 2 loses
     if (y2 == by1 && b1 == true)
-    { // se if p2 dies
+    {
+//        add to scores and reinit game
         score1++;
         Serial.print(score1);
         Serial.print(" ");
@@ -200,8 +204,10 @@ void collide2()
 
     }
 }
+//player 1 left
 void left1()
 { // button bounce
+  
     if ((micros() - last_left) >= 100000)
     { 
         if (move1 == true && y1 > 0)
@@ -212,6 +218,7 @@ void left1()
         }
     }   
 }
+//player 1 right
 void right1()
 { //button bounce
     if ((micros() - last_right) >= 100000)
@@ -224,6 +231,7 @@ void right1()
         }
       }  
 }
+//player 2 right
 void right2()
 { //button bounce
     if ((micros() - last_right2) >= 100000)
@@ -236,6 +244,7 @@ void right2()
         }
     }   
 }
+//player 2 left
 void left2()
 { //button bounce
     if ((micros() - last_left2) >= 100000)
@@ -248,7 +257,7 @@ void left2()
         }
       }  
 }
-
+//player 1 shoot
 void shoot1()
 {
     //button bounce
@@ -263,6 +272,7 @@ void shoot1()
         }
     }   
 }
+//player 2 shoot
 void shoot2()
 {
     //button bounce
@@ -279,6 +289,7 @@ void shoot2()
         }
     } 
 }
+//main func
 void update()
 {
    //see if the bullets collide
@@ -291,7 +302,7 @@ void update()
             screen[i][n] = 0;
         }
     }
-
+//    update internal representation of the game
     for(int i = 0; i < 8; i++)
     {
         if (b1 == true)
@@ -306,6 +317,7 @@ void update()
     screen[0][y1] = 1;
     screen[7][y2] = 1;
     lc.clearDisplay(0);
+//    write to screen
     for(int i = 0; i < 8; i++)
     {
       for (int n = 0; n < 8; n++) 
@@ -316,33 +328,31 @@ void update()
         }
       }
     }
-    //
-    ///DO THE MATRIX CODE HERE USING "SETLED"
-    //
     //if either player moved, display the current state in the serial
+    /*
     if (move1 == false || move2 == false)
     {
-      for (int i = 0; i < 8; i++)
-      {
-        move1 = true;
-        for (int n = 0; n < 8; n++)
+        for (int i = 0; i < 8; i++)
         {
-          if (screen[i][n] == 0)
-          {
-            Serial.print("_");
-          }
-          else
-          {
-            Serial.print("#");
-          }
+            move1 = true;
+            for (int n = 0; n < 8; n++)
+            {
+                if (screen[i][n] == 0)
+                {
+                    Serial.print("_");
+                }
+                else
+                {
+                    Serial.print("#");
+                }
+            }
+            Serial.println();
         }
+        Serial.println(b1);
         Serial.println();
-      }
-      
-      Serial.println(b1);
-      Serial.println();
     }
-    //make the bullets stay for 3/4 seconds after shotx
+    */
+    //make the bullets stay for 3/4 seconds after shot, then delete
     if ((millis() - b1time) >= 750 && b1 == true)
     {
       b1 = false;
@@ -352,14 +362,14 @@ void update()
     {
         b2 = false; 
     }
-    //let movement happen and check if either playe dies
+    //let movement happen and check if either playe loses
     move1 = true;
     move2 = true;
     collide1();
     collide2();
 
 }
-
+//print scores
 void scores(int score1, int score2)
 {
     lcd.setCursor(0,0);
