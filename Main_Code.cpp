@@ -57,7 +57,7 @@ void setup()
 }
 void loop()
 {
-//    update functtion, where almost everything happens
+//    update function, where almost everything happens
     update();
 //    delay, tthat checks for shooting every millisecond. This is used instead of interrupts as using all 6 interrupts was messing with the arduino
     for(int i = 0; i < 50; i++)
@@ -328,7 +328,8 @@ void update()
         }
       }
     }
-    //if either player moved, display the current state in the serial
+//     if either player moved, display the current state in the serial
+//     uncomment to add this feature
     /*
     if (move1 == false || move2 == false)
     {
@@ -380,4 +381,36 @@ void scores(int score1, int score2)
     lcd.print("Player2 Score:");
     lcd.setCursor(15,1);
     lcd.print(score2);
+//    if player 1 wins
+    if (score1 == 5)
+    {
+        lcd.init();
+        lcd.setCursor(0,0);
+        lcd.print("Player 1 Wins!");
+//        wait until a trigger is pressed to restart the game
+        while (true)
+        {
+          if (digitalRead(6) == HIGH || digitalRead(7) == HIGH)
+          {
+            setup();
+            break;
+          }
+        }
+    }
+//    if player 2 wins
+    if (score2 == 5)
+    {
+        lcd.init();
+        lcd.setCursor(0,0);
+        lcd.print("Player 2 Wins!");
+//        wait until trigger is pressed to restart the game
+        while (true)
+        {
+          if (digitalRead(6) == HIGH || digitalRead(7) == HIGH)
+          {
+            setup();
+            break;
+          }
+        }
+    }
 }
